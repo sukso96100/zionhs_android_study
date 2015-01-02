@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- 각 메뉴 항목은 item 태그로 정의합니다.
+       android:id="@+id/action_refresh" 항목의 id 값 - 여기서는 action_refresh
+       android:title="@string/refresh" 메뉴 항목에 표시할 텍스트
+       android:orderInCategory="100" Overflow Menu 에서 몇 번째로 보일지 지정. 여기서는 100번째
+       app:showAsAction="never" 액션메뉴 버튼으로 보일지 여부. ifRoom 으로 하면 공간이 있을떄,
+           Oveeflow Menu 버튼 옆에 별도 버튼으로. never 로 하면 Overflow Menu 에만 나타남.-->
+    <item android:id="@+id/action_refresh" android:title="@string/refresh"
+        android:orderInCategory="100" app:showAsAction="never" />
+</menu>
