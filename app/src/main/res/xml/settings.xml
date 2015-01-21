@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--도시 id 설정-->
+    <EditTextPreference
+        android:key="pref_city_id"
+        android:title="@string/pref_city_id"
+        android:defaultValue="@string/pref_city_id_default_value"
+        android:inputType="text"
+        android:singleLine="true"/>
+    <!--온도 단위 설정-->
+    <ListPreference
+        android:key="pref_unit"
+        android:title="@string/pref_unit"
+        android:dialogTitle="@string/pref_unit_dialog"
+        android:entries="@array/pref_unit_entry"
+        android:entryValues="@array/pref_unit_entry_value"
+        android:defaultValue="@string/pref_unit_default_value" />
+</PreferenceScreen>

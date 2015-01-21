@@ -9,4 +9,6 @@
            Oveeflow Menu 버튼 옆에 별도 버튼으로. never 로 하면 Overflow Menu 에만 나타남.-->
     <item android:id="@+id/action_refresh" android:title="@string/refresh"
         android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_web" android:title="@string/web"
+        app:showAsAction="never"/>
 </menu>

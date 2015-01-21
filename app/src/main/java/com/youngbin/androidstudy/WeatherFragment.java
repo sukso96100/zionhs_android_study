@@ -1,8 +1,11 @@
 package com.youngbin.androidstudy;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,8 +14,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,10 +62,40 @@ public class WeatherFragment extends Fragment {
         ListView LV = (ListView)rootView.findViewById(R.id.listView); //R.id.(ListView id 값 - Layout 파일에서 확인 가능)
         //Adapter 설정
         LV.setAdapter(myAdapter);
-        myAsyncTask mat = new myAsyncTask(); //myAsyncTask 객체 생성
-        mat.execute("1838716"); //myAsyncTask 실행하기
+
+
+        updateWeather();
+
+        LV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String ForecastItem = myAdapter.getItem(position);//항목에 해당되는 데이터 얻기
+                //새로운 Intent 객체 만들기
+                //getActivity() - Context 는 Activity 에서 얻습니다.
+                //DetailFragment.class 대상 앱 컴포넌트 입니다.
+                Intent DetailIntent = new Intent(getActivity(), DetailActivity.class);
+                // 키값은 weather_data, 첨부된 데이터는 String 형태인 ForecastItem 로 하였습니다.
+                DetailIntent.putExtra("weather_data", ForecastItem);
+                startActivity(DetailIntent); // Activity 시작하기
+            }
+        });
+
+
+
         return rootView;
     }
+
+    void updateWeather(){
+        SharedPreferences Pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String CityId = Pref.getString("pref_city_id",
+                getString(R.string.pref_city_id_default_value));
+        String Unit = Pref.getString("pref_unit",
+                getString(R.string.pref_unit_default_value));
+
+        myAsyncTask mat = new myAsyncTask(); //myAsyncTask 객체 생성
+        mat.execute(CityId,Unit); //myAsyncTask 실행하기
+    }
+
     protected class myAsyncTask extends AsyncTask<String, Void, String[]> {
         String forecastJsonStr = null;
 
@@ -72,7 +107,7 @@ public class WeatherFragment extends Fragment {
 
             // 날시 데이터 URL 에 사용될 옵션
             String format = "json";
-            String units = "metric";
+            String units =  params[1];
             int numDays = 7;
             try {
                 //새 URL 객체
@@ -83,6 +118,7 @@ public class WeatherFragment extends Fragment {
                 final String FORMAT_PARAM = "mode";
                 final String UNITS_PARAM = "units";
                 final String DAYS_PARAM = "cnt";
+
 
                 Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
                         .appendQueryParameter(QUERY_PARAM, params[0])
@@ -187,9 +223,17 @@ public class WeatherFragment extends Fragment {
         //얻은 id 값에 따라 클릭 처리
         if (id == R.id.action_refresh) { //id값이 action_refresh 이면.
             // 네트워크 작업 실행
-            myAsyncTask mat = new myAsyncTask(); //myAsyncTask 객체 생성
-            mat.execute("1838716"); //myAsyncTask 실행하기
+            updateWeather();
             return true;
+        }else if(id == R.id.action_web){
+            SharedPreferences Pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String CityId = Pref.getString("pref_city_id",
+                    getString(R.string.pref_city_id_default_value));
+            String URL = "http://openweathermap.org/city/" + CityId;
+            Uri webpage = Uri.parse(URL);
+            Intent intent = new Intent(Intent.ACTION_VIEW, webpage);
+                startActivity(intent);
+
         }
 
         return super.onOptionsItemSelected(item);
