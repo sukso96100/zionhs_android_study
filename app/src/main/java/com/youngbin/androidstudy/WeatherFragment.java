@@ -1,5 +1,6 @@
 package com.youngbin.androidstudy;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -19,6 +20,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.BaseJsonHttpResponseHandler;
+import com.youngbin.androidstudy.data.WeatherDataManager;
+
+import org.apache.http.Header;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -62,9 +70,9 @@ public class WeatherFragment extends Fragment {
         ListView LV = (ListView)rootView.findViewById(R.id.listView); //R.id.(ListView id 값 - Layout 파일에서 확인 가능)
         //Adapter 설정
         LV.setAdapter(myAdapter);
+        loadData(getActivity());
 
-
-        updateWeather();
+        
 
         LV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -85,129 +93,11 @@ public class WeatherFragment extends Fragment {
         return rootView;
     }
 
-    void updateWeather(){
-        SharedPreferences Pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String CityId = Pref.getString("pref_city_id",
-                getString(R.string.pref_city_id_default_value));
-        String Unit = Pref.getString("pref_unit",
-                getString(R.string.pref_unit_default_value));
+ 
 
-        myAsyncTask mat = new myAsyncTask(); //myAsyncTask 객체 생성
-        mat.execute(CityId,Unit); //myAsyncTask 실행하기
-    }
-
-    protected class myAsyncTask extends AsyncTask<String, Void, String[]> {
-        String forecastJsonStr = null;
-
-        @Override
-        protected String[] doInBackground(String... params) {
-            HttpURLConnection urlConnection = null; //HttpUrlConnection
-            BufferedReader reader = null;
+         
 
 
-            // 날시 데이터 URL 에 사용될 옵션
-            String format = "json";
-            String units =  params[1];
-            int numDays = 7;
-            try {
-                //새 URL 객체
-                //UriBuilder 를 이용해 URL 만들기
-                final String FORECAST_BASE_URL =
-                        "http://api.openweathermap.org/data/2.5/forecast/daily?";
-                final String QUERY_PARAM = "id";
-                final String FORMAT_PARAM = "mode";
-                final String UNITS_PARAM = "units";
-                final String DAYS_PARAM = "cnt";
-
-
-                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
-                        .appendQueryParameter(QUERY_PARAM, params[0])
-                        .appendQueryParameter(FORMAT_PARAM, format)
-                        .appendQueryParameter(UNITS_PARAM, units)
-                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
-                        .build();
-
-                URL url = new URL(builtUri.toString());
-                Log.d("URL", url.toString());
-                //새 URLConnection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-                //InputStream 을 사용해 데이터 읽어들이기
-                InputStream inputStream = urlConnection.getInputStream();
-                //StringBuffer 에 데이터 저장
-                StringBuffer buffer = new StringBuffer(); // 새로운 StringBuffer 생성
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-                if (buffer.length() == 0) {
-                    // 불러온 데이터가 비어있음.
-                    forecastJsonStr = null;
-                }
-                forecastJsonStr = buffer.toString(); //로드한 데이터 문자열 변수에 저장.
-            } catch (IOException e) {
-                forecastJsonStr = null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect(); //HttpURLConnection 연결 끊기
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                    }
-                }
-            }
-
-            try {
-                JSONObject JsonObj = new JSONObject(forecastJsonStr);
-                Log.d("JSON", forecastJsonStr);
-                JSONArray JsonArray = JsonObj.getJSONArray("list");
-                String[] WeatherDataArray = new String[JsonArray.length()];
-                for (int i = 0; i < JsonArray.length(); i++) {
-                    String MaxTemp = null; // 최대기온 저장할 변수
-                    String MinTemp = null; // 최저기온 저장할 변수
-                    String WeatherMain = null; // 날시상태 저장할 변수
-                    String Item; // 1일 날시정보 저장할 변수
-                    JSONObject EachObj = JsonArray.getJSONObject(i); // i 번째 객체 얻기
-                    JSONObject Temp = EachObj.getJSONObject("temp"); // i 번쨰 객체에서 "temp" 객체 얻기
-                    MaxTemp = Temp.getString("max"); // "temp" 객체에서 최대기온인 "max" 얻기
-                    MinTemp = Temp.getString("min"); // "temp" 객체에서 최저기온인 "min" 얻기
-
-                    // i 번째 객체에서 "weather" Json Array 얻기
-                    JSONArray WeatherArray = EachObj.getJSONArray("weather");
-                    // "weather" Json Array 의 0번째 객체 얻기
-                    JSONObject WeatherObj = WeatherArray.getJSONObject(0);
-                    // 0번째 객체에서 날시 상태에 해당되는 "main" 얻기
-                    WeatherMain = WeatherObj.getString("main");
-
-                    //하나의 문자열로 저장
-                    Item = WeatherMain + " : " + " MAX=" + MaxTemp + " MIN=" + MinTemp;
-                    Log.d("Item",Item);
-                    // WeatherDataArray 에 i 번째 항목으로 넣기
-                    WeatherDataArray[i] = Item;
-
-
-                }
-                return WeatherDataArray; //데이터 반환
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String[] Data) { // 백그라운드 작업 후, UI Thread 에서 실행 됩니다.
-            if (Data != null) {
-                myAdapter.clear();// Adapter 가 가진 데이터 모두 지우기
-                for (String dayForecastStr : Data) {
-                    myAdapter.add(dayForecastStr);// 반복문 이용해 데이터 새로 넣기
-                }
-            }
-        }
-    }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // 정의한 Menu 리소스를 여기서 Inflate 합니다.
@@ -223,7 +113,7 @@ public class WeatherFragment extends Fragment {
         //얻은 id 값에 따라 클릭 처리
         if (id == R.id.action_refresh) { //id값이 action_refresh 이면.
             // 네트워크 작업 실행
-            updateWeather();
+            loadData(getActivity());
             return true;
         }else if(id == R.id.action_web){
             SharedPreferences Pref = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -237,5 +127,106 @@ public class WeatherFragment extends Fragment {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void loadData(final Context context){
+
+        SharedPreferences Pref = PreferenceManager.getDefaultSharedPreferences(context);
+        String CityId = Pref.getString("pref_city_id",
+                context.getString(R.string.pref_city_id_default_value));
+        String Unit = Pref.getString("pref_unit",
+                context.getString(R.string.pref_unit_default_value));
+
+        final String FORECAST_BASE_URL =
+                "http://api.openweathermap.org/data/2.5/forecast/daily?";
+        final String QUERY_PARAM = "id";
+        final String FORMAT_PARAM = "mode";
+        final String UNITS_PARAM = "units";
+        final String DAYS_PARAM = "cnt";
+
+
+        Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                .appendQueryParameter(QUERY_PARAM, CityId)
+                .appendQueryParameter(FORMAT_PARAM, "json")
+                .appendQueryParameter(UNITS_PARAM, Unit)
+                .appendQueryParameter(DAYS_PARAM, Integer.toString(7))
+                .build();
+
+        AsyncHttpClient Client = new AsyncHttpClient();
+        Client.get(builtUri.toString(), new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String ConvertedResponse = null;
+                try {
+                    ConvertedResponse = new String(responseBody, "UTF-8");
+                    Log.d("JsonResponse", ConvertedResponse);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();}
+
+                    String[] State = new String[7];
+                    String[] Max= new String[7];
+                    String[] Min= new String[7];
+                    try {
+                        JSONObject JsonObj = new JSONObject(ConvertedResponse);
+                        JSONArray JsonArray = JsonObj.getJSONArray("list");
+                        String[] WeatherDataArray = new String[JsonArray.length()];
+                        for (int i = 0; i < JsonArray.length(); i++) {
+                            String MaxTemp = null; // 최대기온 저장할 변수
+                            String MinTemp = null; // 최저기온 저장할 변수
+                            String WeatherMain = null; // 날시상태 저장할 변수
+                            String Item; // 1일 날시정보 저장할 변수
+                            JSONObject EachObj = JsonArray.getJSONObject(i); // i 번째 객체 얻기
+                            JSONObject Temp = EachObj.getJSONObject("temp"); // i 번쨰 객체에서 "temp" 객체 얻기
+                            MaxTemp = Temp.getString("max"); // "temp" 객체에서 최대기온인 "max" 얻기
+                            MinTemp = Temp.getString("min"); // "temp" 객체에서 최저기온인 "min" 얻기
+
+                            // i 번째 객체에서 "weather" Json Array 얻기
+                            JSONArray WeatherArray = EachObj.getJSONArray("weather");
+                            // "weather" Json Array 의 0번째 객체 얻기
+                            JSONObject WeatherObj = WeatherArray.getJSONObject(0);
+                            // 0번째 객체에서 날시 상태에 해당되는 "main" 얻기
+                            WeatherMain = WeatherObj.getString("main");
+
+                            //하나의 문자열로 저장
+                            Item = WeatherMain + " : " + " MAX=" + MaxTemp + " MIN=" + MinTemp;
+                            Log.d("Item",Item);
+                            // WeatherDataArray 에 i 번째 항목으로 넣기
+                            WeatherDataArray[i] = Item;
+                            State[i] = WeatherMain;
+                            Max[i] = MaxTemp;
+                            Min[i] = MinTemp;
+
+
+                        }
+                        if (WeatherDataArray != null) {
+                            myAdapter.clear();// Adapter 가 가진 데이터 모두 지우기
+                            for (String dayForecastStr : WeatherDataArray) {
+                                myAdapter.add(dayForecastStr);// 반복문 이용해 데이터 새로 넣기
+                            }
+                        }
+                    } catch (JSONException error) {
+                        error.printStackTrace();
+                    }
+                WeatherDataManager manager = new WeatherDataManager(getActivity());
+                manager.dropOldAndSaveNew(State, Max, Min, 7);
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                WeatherDataManager manager = new WeatherDataManager(context);
+                String[] Data = manager.loadDataFromRealm();
+                if (Data != null) {
+                    myAdapter.clear();// Adapter 가 가진 데이터 모두 지우기
+                    for (String dayForecastStr : Data) {
+                        myAdapter.add(dayForecastStr);// 반복문 이용해 데이터 새로 넣기
+                    }
+                }
+            }
+        });
+
+
+
+
     }
 }
