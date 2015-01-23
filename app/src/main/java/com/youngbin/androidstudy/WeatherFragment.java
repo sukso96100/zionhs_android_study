@@ -48,6 +48,7 @@ import java.util.List;
 public class WeatherFragment extends Fragment {
     ArrayList<String> WeatherData;
     ArrayAdapter<String> myAdapter;
+    WeatherAdapter myWeatherAdapter;
 
     public WeatherFragment() {
     }
@@ -59,18 +60,31 @@ public class WeatherFragment extends Fragment {
         // 이 Fragment 가 Overflow Menu 를 가지고 있음을 알리기.
         setHasOptionsMenu(true);
         //문자열 배열로 ListView에 넣을 데이터 만들기. 이름은 myArray.
-        String[] myArray = {"Sample Item 0", "Sample Item 1", "Sample Item 2", "Sample Item 3", "Sample Item 4"};
-        List<String> myArrayList = new ArrayList<String>(Arrays.asList(myArray));
+        String[] dayArray = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
+        ArrayList<String> dayArrayList = new ArrayList<String>(Arrays.asList(dayArray));
+
+        String[] stateArray = {"Clear", "Sunny", "Rain", "Cloud", "Snow", "Clear", "Rain"};
+        ArrayList<String> stateArrayList = new ArrayList<String>(Arrays.asList(stateArray));
+
+        String[] maxTempArray = {"15","15","15","15","15","15","15"};
+        ArrayList<String> maxTempArrayList = new ArrayList<String>(Arrays.asList(maxTempArray));
+
+        String[] minTempArray = {"15","15","15","15","15","15","15"};
+        ArrayList<String> minTempArrayList = new ArrayList<String>(Arrays.asList(minTempArray));
         //ArrayAdapter 초기화
-        myAdapter = new ArrayAdapter<String>(
-                getActivity(), //Context - Fragment 는 Context 를 가지지 않으므로 Activity 에서 얻어옴
-                android.R.layout.simple_list_item_1, //각 항목별 Layout - 일단은 안드로이드 시스템 내장 리소스 얻어옴
-                myArrayList); //ListView 에 표시될 데이터
+//        myAdapter = new ArrayAdapter<String>(
+//                getActivity(), //Context - Fragment 는 Context 를 가지지 않으므로 Activity 에서 얻어옴
+//                android.R.layout.simple_list_item_1, //각 항목별 Layout - 일단은 안드로이드 시스템 내장 리소스 얻어옴
+//                myArrayList); //ListView 에 표시될 데이터
+
+        myWeatherAdapter = new WeatherAdapter(getActivity(), dayArrayList, stateArrayList, maxTempArrayList, minTempArrayList);
+
         //ListView 찾기
         ListView LV = (ListView)rootView.findViewById(R.id.listView); //R.id.(ListView id 값 - Layout 파일에서 확인 가능)
         //Adapter 설정
-        LV.setAdapter(myAdapter);
-        loadData(getActivity());
+//        LV.setAdapter(myAdapter);
+        LV.setAdapter(myWeatherAdapter);
+//        loadData(getActivity());
 
         
 

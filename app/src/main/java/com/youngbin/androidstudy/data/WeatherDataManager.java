@@ -25,7 +25,7 @@ public class WeatherDataManager {
             String[] State, String[] Max, String[] Min, int number){
 
         Log.d(TAG, "Caching Data");
-        //모든 데이터 쿼리하여 불러오기 
+        //모든 데이터 쿼리하여 불러오기
         RealmResults<WeatherDataModel> result = queryAll();
         //데이터 처리 시작
         realm.beginTransaction();
@@ -35,7 +35,7 @@ public class WeatherDataManager {
 
         for(int i=0;i<number;i++){
             realm.beginTransaction();
-            //새로 데이 객체 생성 
+            //새로 데이 객체 생성
             WeatherDataModel Data = realm.createObject(WeatherDataModel.class);
             //각 필드마다 데이터 설정
             Data.setState(State[i]);
