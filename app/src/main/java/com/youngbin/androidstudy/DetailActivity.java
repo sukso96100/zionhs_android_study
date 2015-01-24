@@ -20,6 +20,8 @@ import android.view.ViewGroup;
 import android.os.Build;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 
 public class DetailActivity extends ActionBarActivity {
 
@@ -41,7 +43,10 @@ public class DetailActivity extends ActionBarActivity {
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {
-        String WeatherData;
+        String DAY;
+        String STATE;
+        String MAX;
+        String MIN;
         public PlaceholderFragment() {
         }
 
@@ -52,11 +57,21 @@ public class DetailActivity extends ActionBarActivity {
 
             View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
             //날씨 정보 표시에 쓸 TextView 찾기
-            TextView WeatherTxt = (TextView)rootView.findViewById(R.id.weather_data);
+            TextView txtDay = (TextView)rootView.findViewById(R.id.day);
+            TextView txtState = (TextView)rootView.findViewById(R.id.state);
+            TextView txtMax = (TextView)rootView.findViewById(R.id.max);
+            TextView txtMin = (TextView)rootView.findViewById(R.id.min);
+
             //Activity 가 받은 Intent 얻어내어, 같이 Extra 로 온 데이터 얻기
-            WeatherData = getActivity().getIntent().getStringExtra("weather_data");
+            DAY = getActivity().getIntent().getStringExtra("day");
+            STATE = getActivity().getIntent().getStringExtra("state");
+            MAX = getActivity().getIntent().getStringExtra("max");
+            MIN = getActivity().getIntent().getStringExtra("min");
             //TextView 내용을 얻은 데이터로 설정.
-            WeatherTxt.setText(WeatherData);
+            txtDay.setText(DAY);
+            txtState.setText(STATE);
+            txtMax.setText(MAX);
+            txtMin.setText(MIN);
             return rootView;
         }
 
@@ -92,7 +107,7 @@ public class DetailActivity extends ActionBarActivity {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
             shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_TEXT,WeatherData);
+            shareIntent.putExtra(Intent.EXTRA_TEXT,DAY+"|"+STATE+","+"Max:"+MAX+","+"Min:"+MIN);
             return shareIntent;
         }
     }

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.DeadObjectException;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,6 +51,11 @@ public class WeatherFragment extends Fragment {
     ArrayList<String> WeatherData;
     ArrayAdapter<String> myAdapter;
     WeatherAdapter myWeatherAdapter;
+    ArrayList<String> dayArrayList;
+    ArrayList<String> stateArrayList;
+    ArrayList<String> maxTempArrayList;
+    ArrayList<String> minTempArrayList;
+    ListView LV;
 
     public WeatherFragment() {
     }
@@ -61,44 +68,37 @@ public class WeatherFragment extends Fragment {
         setHasOptionsMenu(true);
         //문자열 배열로 ListView에 넣을 데이터 만들기. 이름은 myArray.
         String[] dayArray = {"Sunday", "Monday", "Tuesday","Wednesday", "Thursday", "Friday", "Saturday"};
-        ArrayList<String> dayArrayList = new ArrayList<String>(Arrays.asList(dayArray));
+        dayArrayList = new ArrayList<String>(Arrays.asList(dayArray));
 
         String[] stateArray = {"Clear", "Sunny", "Rain", "Cloud", "Snow", "Clear", "Rain"};
-        ArrayList<String> stateArrayList = new ArrayList<String>(Arrays.asList(stateArray));
+        stateArrayList = new ArrayList<String>(Arrays.asList(stateArray));
 
         String[] maxTempArray = {"15","15","15","15","15","15","15"};
-        ArrayList<String> maxTempArrayList = new ArrayList<String>(Arrays.asList(maxTempArray));
+        maxTempArrayList = new ArrayList<String>(Arrays.asList(maxTempArray));
 
         String[] minTempArray = {"15","15","15","15","15","15","15"};
-        ArrayList<String> minTempArrayList = new ArrayList<String>(Arrays.asList(minTempArray));
-        //ArrayAdapter 초기화
-//        myAdapter = new ArrayAdapter<String>(
-//                getActivity(), //Context - Fragment 는 Context 를 가지지 않으므로 Activity 에서 얻어옴
-//                android.R.layout.simple_list_item_1, //각 항목별 Layout - 일단은 안드로이드 시스템 내장 리소스 얻어옴
-//                myArrayList); //ListView 에 표시될 데이터
+        minTempArrayList = new ArrayList<String>(Arrays.asList(minTempArray));
 
-        myWeatherAdapter = new WeatherAdapter(getActivity(), dayArrayList, stateArrayList, maxTempArrayList, minTempArrayList);
+        myWeatherAdapter = new WeatherAdapter(getActivity(), dayArrayList, stateArrayList,
+                maxTempArrayList, minTempArrayList);
 
         //ListView 찾기
-        ListView LV = (ListView)rootView.findViewById(R.id.listView); //R.id.(ListView id 값 - Layout 파일에서 확인 가능)
+        LV = (ListView)rootView.findViewById(R.id.listView); //R.id.(ListView id 값 - Layout 파일에서 확인 가능)
         //Adapter 설정
-//        LV.setAdapter(myAdapter);
         LV.setAdapter(myWeatherAdapter);
-//        loadData(getActivity());
+        loadData(getActivity());
 
         
 
         LV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String ForecastItem = myAdapter.getItem(position);//항목에 해당되는 데이터 얻기
-                //새로운 Intent 객체 만들기
-                //getActivity() - Context 는 Activity 에서 얻습니다.
-                //DetailFragment.class 대상 앱 컴포넌트 입니다.
                 Intent DetailIntent = new Intent(getActivity(), DetailActivity.class);
-                // 키값은 weather_data, 첨부된 데이터는 String 형태인 ForecastItem 로 하였습니다.
-                DetailIntent.putExtra("weather_data", ForecastItem);
-                startActivity(DetailIntent); // Activity 시작하기
+                DetailIntent.putExtra("day", dayArrayList.get(position));
+                DetailIntent.putExtra("state", stateArrayList.get(position));
+                DetailIntent.putExtra("max", maxTempArrayList.get(position));
+                DetailIntent.putExtra("min", minTempArrayList.get(position));
+                startActivity(DetailIntent);
             }
         });
 
@@ -180,6 +180,7 @@ public class WeatherFragment extends Fragment {
                     String[] State = new String[7];
                     String[] Max= new String[7];
                     String[] Min= new String[7];
+
                     try {
                         JSONObject JsonObj = new JSONObject(ConvertedResponse);
                         JSONArray JsonArray = JsonObj.getJSONArray("list");
@@ -212,15 +213,18 @@ public class WeatherFragment extends Fragment {
 
 
                         }
-                        if (WeatherDataArray != null) {
-                            myAdapter.clear();// Adapter 가 가진 데이터 모두 지우기
-                            for (String dayForecastStr : WeatherDataArray) {
-                                myAdapter.add(dayForecastStr);// 반복문 이용해 데이터 새로 넣기
-                            }
-                        }
+
+                        stateArrayList = new ArrayList<String>(Arrays.asList(State));
+                        maxTempArrayList = new ArrayList<String>(Arrays.asList(Max));
+                        minTempArrayList = new ArrayList<String>(Arrays.asList(Min));
+
+                        myWeatherAdapter = new WeatherAdapter(getActivity(), dayArrayList, stateArrayList,
+                                maxTempArrayList, minTempArrayList);
+                        LV.setAdapter(myWeatherAdapter);
                     } catch (JSONException error) {
                         error.printStackTrace();
                     }
+                //네트워킹으로 얻은 데이터 기기에 저장 
                 WeatherDataManager manager = new WeatherDataManager(getActivity());
                 manager.dropOldAndSaveNew(State, Max, Min, 7);
 
@@ -228,14 +232,20 @@ public class WeatherFragment extends Fragment {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    //기기에 저장된 데이터 로드
                 WeatherDataManager manager = new WeatherDataManager(context);
-                String[] Data = manager.loadDataFromRealm();
-                if (Data != null) {
-                    myAdapter.clear();// Adapter 가 가진 데이터 모두 지우기
-                    for (String dayForecastStr : Data) {
-                        myAdapter.add(dayForecastStr);// 반복문 이용해 데이터 새로 넣기
-                    }
-                }
+                String[] StateCache = manager.loadStateArrayList();
+                String[] MaxCache = manager.loadMaxArrayList();
+                String[] MinCache = manager.loadMinArrayList();
+                stateArrayList = new ArrayList<String>(Arrays.asList(StateCache));
+                maxTempArrayList = new ArrayList<String>(Arrays.asList(MaxCache));
+                minTempArrayList = new ArrayList<String>(Arrays.asList(MinCache));
+
+                myWeatherAdapter = new WeatherAdapter(getActivity(), dayArrayList, stateArrayList,
+                        maxTempArrayList, minTempArrayList);
+                LV.setAdapter(myWeatherAdapter);
+
+
             }
         });
 

@@ -48,6 +48,7 @@ public class WeatherDataManager {
 
     //날씨 상태 데이터 로드하는 함수
     public String[] loadStateArrayList(){
+        Log.d(TAG, "Loading From Cache");
         //캐시된 데이터 모두 로드
         RealmResults<WeatherDataModel> result = queryAll();
         String[] List = new String[result.size()];
@@ -61,6 +62,7 @@ public class WeatherDataManager {
 
     //최대기온 데이터 로드하는 함수
     public String[] loadMaxArrayList(){
+        Log.d(TAG, "Loading From Cache");
         //캐시된 데이터 모두 로드
         RealmResults<WeatherDataModel> result = queryAll();
         String[] List = new String[result.size()];
@@ -74,6 +76,7 @@ public class WeatherDataManager {
 
     //최저기온 데이터 로드하는 함수 
     public String[] loadMinArrayList(){
+        Log.d(TAG, "Loading From Cache");
         //캐시된 데이터 모두 로드 
         RealmResults<WeatherDataModel> result = queryAll();
         String[] List = new String[result.size()];

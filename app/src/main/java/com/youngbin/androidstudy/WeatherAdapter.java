@@ -10,9 +10,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-/**
- * Created by 영자신문-1 on 2015-01-23.
- */
+//메인 화면에 일기예보 표시에 사용할 커스텀 어뎁터
 public class WeatherAdapter extends BaseAdapter{
 
     Activity ctx;
@@ -21,16 +19,19 @@ public class WeatherAdapter extends BaseAdapter{
     ArrayList<String> MaxTemp;
     ArrayList<String> MinTemp;
 
+    //생성자(초기화 블럭) - 어뎁터 초기화 할때 호출하며, 필요한 값들을 받습니다.
     public WeatherAdapter(Activity Activity, ArrayList<String> day,
                           ArrayList<String> state, ArrayList<String> maxtemp,
                           ArrayList<String> mintemp){
-        super();
+        super(); //부모 클래스인 BaseAdapter 의 생성자를 호출합니다.
         this.ctx = Activity;
         this.Day = day;
         this.State = state;
         this.MaxTemp = maxtemp;
         this.MinTemp = mintemp;
     }
+
+    //어뎁터가 가진 데이터 갯수를 반환하는 메서드
     @Override
     public int getCount() {
         return State.size();
@@ -46,6 +47,7 @@ public class WeatherAdapter extends BaseAdapter{
         return 0;
     }
 
+    // 각 하목바다 표시할 View 들을 보관하는 ViewHolder 클래스
     private class ViewHolder{
         TextView txtDay;
         TextView txtState;
@@ -53,6 +55,7 @@ public class WeatherAdapter extends BaseAdapter{
         TextView txtMinTemp;
     }
 
+    //ListView 에 표시할 View를 생성하여 반환하는 메서드
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
     ViewHolder holder;
