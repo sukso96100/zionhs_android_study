@@ -224,7 +224,7 @@ public class WeatherFragment extends Fragment {
                     } catch (JSONException error) {
                         error.printStackTrace();
                     }
-                //네트워킹으로 얻은 데이터 기기에 저장 
+                //네트워킹으로 얻은 데이터 기기에 저장
                 WeatherDataManager manager = new WeatherDataManager(getActivity());
                 manager.dropOldAndSaveNew(State, Max, Min, 7);
 

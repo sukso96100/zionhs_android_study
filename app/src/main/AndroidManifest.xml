@@ -37,13 +37,18 @@
         </activity>
 
         <receiver
-            android:name=".MyReceiver"
+            android:name=".BootReceiver"
             android:enabled="true"
             android:exported="true" >
             <intent-filter>
-                <action android:name="android.intent.action.ACTION_POWER_CONNECTED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
+        <service android:name="com.youngbin.androidstudy.MyService"
+            android:exported="true"
+            android:enabled="true" >
+        </service>
     </application>
 
 </manifest>
+
